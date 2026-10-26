@@ -543,7 +543,7 @@
   @keyframes blink { 50% { opacity: 0; } }
 
   @media (max-height: 700px) {
-    .loader { width: 420px; }
+    html:not(.hosted) .loader { width: 420px; }
     .hero { aspect-ratio: 3.4 / 1; }
     .login { padding: 12px 14px 12px; gap: 8px; }
     .body { padding: 10px 12px 12px; gap: 9px; }
@@ -551,7 +551,7 @@
     .field, .inject-btn { height: 34px; }
   }
   @media (max-width: 500px) {
-    .loader { width: calc(100vw - 20px); }
+    html:not(.hosted) .loader { width: calc(100vw - 20px); }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -681,6 +681,8 @@
 
   const bridge = (window.chrome && window.chrome.webview) || null;
   const hosted = !!bridge;
+  if (hosted) document.documentElement.classList.add("hosted");
+  const HOST_W = 454;
   const send = (type, data) => {
     if (bridge) bridge.postMessage({ type, data: data || {} });
   };
@@ -724,14 +726,9 @@
   const settleHeight = () => {
     const active = viewLogin.classList.contains("off") ? viewApp : viewLogin;
     if (!active) return;
-    loader.style.height = (titlebar.offsetHeight + active.offsetHeight + 2) + "px";
-    if (hosted) {
-      send("window", {
-        action: "resize",
-        w: Math.ceil(loader.offsetWidth) + 2,
-        h: Math.ceil(loader.offsetHeight) + 2
-      });
-    }
+    const h = titlebar.offsetHeight + active.offsetHeight + 2;
+    loader.style.height = h + "px";
+    if (hosted) send("window", { action: "resize", w: HOST_W, h: h + 2 });
   };
 
   /* ------------------------------------------------------- window controls */
