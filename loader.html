@@ -58,6 +58,11 @@
     pointer-events: none;
   }
 
+  /* In the loader window the page is the card: the host paints the desktop
+     through everything outside the rounded border. */
+  html.hosted body { background: transparent; }
+  html.hosted body::after { display: none; }
+
   .loader {
     position: relative;
     width: 452px;

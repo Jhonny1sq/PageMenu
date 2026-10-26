@@ -14,7 +14,7 @@
   const bridge = (window.chrome && window.chrome.webview) || null;
   const hosted = !!bridge;
 
-  const STORAGE_KEY = "bloodsense.config.v3";
+  const STORAGE_KEY = "bloodsense.config.v4";
   const AUTOSAVE_MS = 900;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -173,7 +173,7 @@
 
   document.addEventListener("keydown", (e) => {
     if (hosted) return;
-    if (e.key !== "Insert" && e.key !== "Escape") return;
+    if (e.key !== "Delete" && e.key !== "Escape") return;
     const tag = e.target.tagName;
     if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
     e.preventDefault();
@@ -312,7 +312,10 @@
     Shift: "SHIFT",
     Alt: "ALT",
     Escape: "ESC",
-    Backspace: "BACKSPACE"
+    Backspace: "BACKSPACE",
+    PageUp: "PGUP",
+    PageDown: "PGDN",
+    Delete: "DELETE"
   };
 
   const labelFor = (e) => {
@@ -411,7 +414,7 @@
   /* ------------------------------------------------------------------ store */
 
   const snapshot = () => ({
-    v: 3,
+    v: 4,
     toggles: $$(".row[data-toggle]").map((r) => r.classList.contains("on")),
     sliders: $$(".slider-row input[type='range']").map((i) => i.value),
     selects: $$(".dropdown").map((s) => s.value),
@@ -426,7 +429,7 @@
   const apply = (s) => {
     if (!s) return;
 
-    if (s.v !== 3) {
+    if (s.v !== 4) {
       // Older layouts had a different control order; start clean instead of
       // mapping stale indices onto unrelated toggles.
       toast("old profile ignored", "err");
@@ -558,6 +561,9 @@
     if (raw) apply(JSON.parse(raw));
   } catch (_) {}
   paintKeybinds();
+
+  // The host hook needs the live bindings, not just the ones changed this session.
+  Object.entries(keybinds).forEach(([slot, key]) => post("keybind", { slot, key }));
 
   requestAnimationFrame(() => {
     fit();
