@@ -725,6 +725,13 @@
     const active = viewLogin.classList.contains("off") ? viewApp : viewLogin;
     if (!active) return;
     loader.style.height = (titlebar.offsetHeight + active.offsetHeight + 2) + "px";
+    if (hosted) {
+      send("window", {
+        action: "resize",
+        w: Math.ceil(loader.offsetWidth) + 2,
+        h: Math.ceil(loader.offsetHeight) + 2
+      });
+    }
   };
 
   /* ------------------------------------------------------- window controls */
@@ -745,6 +752,11 @@
   let dragRaf = 0;
   titlebar.addEventListener("mousedown", (e) => {
     if (e.button !== 0 || e.target.closest(".tl")) return;
+    if (hosted) {
+      send("window", { action: "drag" });
+      e.preventDefault();
+      return;
+    }
     const rect = loader.getBoundingClientRect();
     drag = { x: e.clientX, y: e.clientY, ox: rect.left, oy: rect.top };
     loader.style.position = "fixed";
@@ -948,6 +960,13 @@
     log("inject requested", "hl");
     send("inject_begin", { user: sessionUser || "anonymous", game: "cs2" });
 
+    // When the page runs inside the loader window the host drives the real
+    // scan/launch/inject and reports back over the bridge.
+    if (hosted) {
+      injectLbl.textContent = "SCANNING";
+      return;
+    }
+
     let i = 0;
     const tick = () => {
       if (i >= stepLabels.length) {
@@ -1001,11 +1020,16 @@
       const msg = e.data || {};
       const data = msg.data || {};
       if (msg.type === "status") {
-        if (data.game) setStat($("#statGame"), data.game, data.ok ? "ok" : "warn");
         if (typeof data.build === "string") setStat($("#statBuild"), data.build, "");
-        log(data.text || "status", data.ok ? "ok" : "");
+        if (data.text) log(data.text, data.ok ? "ok" : "");
+      } else if (msg.type === "game") {
+        if (data.state) setStat($("#statGame"), data.state, data.ok ? "ok" : "warn");
       } else if (msg.type === "progress" && typeof data.pct === "number") {
         setProgress(data.pct);
+        if (busy && data.text) {
+          injectLbl.textContent = String(data.text).toUpperCase();
+          log(data.text);
+        }
       } else if (msg.type === "inject_ok") {
         finish(true, data.detail || "");
       } else if (msg.type === "inject_fail") {
