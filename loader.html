@@ -29,6 +29,8 @@
     --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
     --r-sm: 5px;
     --r-md: 10px;
+    --t-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --t-pop: 0.34s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,38 +54,27 @@
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.75) 100%);
+    background: radial-gradient(circle at 50% 45%, transparent 28%, rgba(0, 0, 0, 0.78) 100%);
     pointer-events: none;
   }
 
   .loader {
     position: relative;
-    width: 460px;
+    width: 452px;
     background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
     border: 1px solid var(--border-hi);
     border-radius: var(--r-md);
-    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.02) inset,
-      0 0 70px rgba(255, 42, 42, 0.06);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85), 0 0 70px rgba(255, 42, 42, 0.06);
     overflow: hidden;
     z-index: 2;
-    animation: panelIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    animation: panelIn var(--t-pop) backwards;
+    transition: opacity 0.2s ease, transform 0.2s ease, height 0.34s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes panelIn {
     from { opacity: 0; transform: translateY(14px) scale(0.98); }
     to { opacity: 1; transform: none; }
   }
   .loader.hidden { opacity: 0; pointer-events: none; transform: scale(0.98); }
-  @media (max-height: 660px) {
-    .loader { width: 420px; }
-    .hero { aspect-ratio: 3.4 / 1; }
-    .body { padding: 10px 12px 12px; gap: 9px; }
-    .log { height: 48px; }
-    .field, .inject-btn { height: 34px; }
-  }
-  @media (max-width: 500px) {
-    .loader { width: calc(100vw - 20px); }
-  }
   .loader::before {
     content: "";
     position: absolute;
@@ -92,6 +83,13 @@
     background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
     opacity: 0.6;
     z-index: 3;
+  }
+  .loader.shake { animation: shake 0.36s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-5px); }
+    40%, 60% { transform: translateX(5px); }
   }
 
   /* ------------------------------------------------------------- titlebar */
@@ -108,25 +106,13 @@
 
   .brand {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: baseline;
+    gap: 7px;
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
-  }
-  .brand-mark {
-    display: grid;
-    place-items: center;
-    width: 22px; height: 22px;
-    border-radius: 4px;
-    background: linear-gradient(160deg, rgba(255, 42, 42, 0.25), rgba(255, 42, 42, 0.05));
-    border: 1px solid rgba(255, 42, 42, 0.45);
-    color: var(--accent-soft);
-    font-size: 9px;
-    font-weight: 700;
-    box-shadow: 0 0 12px rgba(255, 42, 42, 0.2);
   }
   .brand .blood { color: var(--accent); }
   .brand .sense { color: var(--text); }
@@ -135,7 +121,6 @@
     font-size: 9px;
     font-weight: 500;
     letter-spacing: 0.1em;
-    margin-left: 2px;
   }
 
   .traffic { display: flex; gap: 7px; }
@@ -144,13 +129,23 @@
     border-radius: 50%;
     cursor: pointer;
     border: 1px solid rgba(0, 0, 0, 0.35);
-    transition: filter 0.15s, transform 0.15s;
+    transition: filter var(--t-fast), transform var(--t-fast);
   }
   .tl.min { background: #febc2e; }
   .tl.zoom { background: #28c840; }
   .tl.close { background: #ff5f57; }
   .tl:hover { filter: brightness(1.25); transform: scale(1.12); }
   .tl:active { filter: brightness(0.75); }
+
+  /* ----------------------------------------------------------------- views */
+  .view { display: flex; flex-direction: column; }
+  .view.off { display: none; }
+
+  .view-enter { animation: viewIn var(--t-pop); }
+  @keyframes viewIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
 
   /* ----------------------------------------------------------------- hero */
   .hero {
@@ -169,7 +164,7 @@
     object-fit: cover;
     object-position: center 30%;
     display: block;
-    filter: grayscale(0.15) contrast(1.12) brightness(0.72) saturate(1.1);
+    filter: grayscale(0.15) contrast(1.12) brightness(0.7) saturate(1.1);
     transform: scale(1.02);
     transition: transform 6s ease;
   }
@@ -192,7 +187,6 @@
     border-radius: 3px;
     background: rgba(6, 6, 8, 0.72);
     border: 1px solid rgba(255, 42, 42, 0.35);
-    backdrop-filter: blur(6px);
     font-family: var(--font-mono);
     font-size: 9px;
     letter-spacing: 0.12em;
@@ -206,25 +200,48 @@
     box-shadow: 0 0 8px var(--accent-glow);
   }
 
-  /* ---------------------------------------------------------------- body */
-  .body { padding: 13px 14px 14px; display: flex; flex-direction: column; gap: 11px; }
+  /* ---------------------------------------------------------------- login */
+  .login { padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+  .login-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+  .login-title h1 {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #ededf1;
+  }
+  .login-title span {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+  }
 
   .field {
     display: flex;
     align-items: center;
     gap: 9px;
-    height: 34px;
+    height: 36px;
     padding: 0 10px;
     background: #0b0b0d;
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
   }
   .field:focus-within {
     border-color: rgba(255, 42, 42, 0.55);
     box-shadow: 0 0 0 2px rgba(255, 42, 42, 0.1);
+    background: #0d0d10;
   }
-  .field svg { width: 13px; height: 13px; fill: var(--text-mute); flex: 0 0 auto; transition: fill 0.15s; }
+  .field.err { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255, 42, 42, 0.14); }
+  .field svg { width: 13px; height: 13px; fill: var(--text-mute); flex: 0 0 auto; transition: fill var(--t-fast); }
   .field:focus-within svg { fill: var(--accent); }
   .field input {
     flex: 1;
@@ -235,21 +252,75 @@
     color: var(--text);
     font-family: var(--font-mono);
     font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
-  .field input::placeholder { color: var(--text-mute); letter-spacing: 0.1em; }
-  .field-state {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.1em;
+  .field input::placeholder { color: var(--text-mute); letter-spacing: 0.12em; text-transform: uppercase; }
+  .field .peek {
+    width: 18px; height: 18px;
+    display: grid; place-items: center;
+    border: none; background: none; cursor: pointer;
     color: var(--text-mute);
-    white-space: nowrap;
+    transition: color var(--t-fast);
   }
-  .field-state.ok { color: var(--ok); }
-  .field-state.err { color: var(--accent); }
+  .field .peek:hover { color: var(--text-dim); }
+  .field .peek svg { width: 12px; height: 12px; fill: currentColor; }
 
-  /* -------------------------------------------------------------- status */
+  .login-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 1px;
+  }
+  .remember {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    transition: color var(--t-fast);
+  }
+  .remember:hover { color: var(--text); }
+  .remember .tick {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    border: 1px solid #3a3a3e;
+    background: #0b0b0d;
+    position: relative;
+    transition: background var(--t-fast), border-color var(--t-fast);
+  }
+  .remember.on .tick {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(255, 42, 42, 0.4);
+  }
+  .remember.on .tick::after {
+    content: "";
+    position: absolute;
+    left: 3.5px; top: 1px;
+    width: 3.5px; height: 6px;
+    border: solid #fff;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+
+  .login-msg {
+    min-height: 14px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity var(--t-fast), transform var(--t-fast);
+  }
+  .login-msg.show { opacity: 1; transform: none; }
+
+  /* ---------------------------------------------------------------- body */
+  .body { padding: 13px 14px 14px; display: flex; flex-direction: column; gap: 11px; }
+
   .status-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -294,7 +365,6 @@
   .stat .v.warn { color: var(--warn); }
   .stat .v.warn i { background: var(--warn); }
 
-  /* ------------------------------------------------------------ progress */
   .progress {
     height: 3px;
     background: #0b0b0d;
@@ -313,9 +383,8 @@
     transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* ----------------------------------------------------------------- log */
   .log {
-    height: 62px;
+    height: 58px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -358,7 +427,8 @@
     cursor: pointer;
     overflow: hidden;
     outline: none;
-    transition: all 0.14s ease;
+    transition: background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast),
+      border-color var(--t-fast), color var(--t-fast);
     box-shadow: 0 6px 18px rgba(255, 42, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
   .inject-btn::after {
@@ -388,6 +458,7 @@
     background: linear-gradient(180deg, #14663c 0%, #0f4d2d 100%);
     border-color: var(--ok);
     color: #d8ffe9;
+    box-shadow: 0 6px 20px rgba(41, 209, 122, 0.18);
   }
 
   .foot {
@@ -401,8 +472,18 @@
     text-transform: uppercase;
     color: #3b3b43;
   }
-  .foot a { color: #3b3b43; text-decoration: none; }
-  .foot a:hover { color: var(--text-dim); }
+  .foot button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: #3b3b43;
+    transition: color var(--t-fast);
+  }
+  .foot button:hover { color: var(--accent-soft); }
 
   /* ----------------------------------------------------------- boot plane */
   .boot {
@@ -460,11 +541,30 @@
     animation: blink 1.05s step-end infinite;
   }
   @keyframes blink { 50% { opacity: 0; } }
+
+  @media (max-height: 700px) {
+    .loader { width: 420px; }
+    .hero { aspect-ratio: 3.4 / 1; }
+    .login { padding: 12px 14px 12px; gap: 8px; }
+    .body { padding: 10px 12px 12px; gap: 9px; }
+    .log { height: 44px; }
+    .field, .inject-btn { height: 34px; }
+  }
+  @media (max-width: 500px) {
+    .loader { width: calc(100vw - 20px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div class="loader" id="loader" data-state="idle">
+<div class="loader" id="loader" data-state="boot">
 
   <div class="boot" id="bootScreen">
     <div class="boot-logo"><span class="blood">Blood</span><span class="sense">Sense</span></div>
@@ -474,9 +574,8 @@
 
   <div class="titlebar" id="titlebar">
     <div class="brand">
-      <span class="brand-mark">BS</span>
       <span class="blood">Blood</span><span class="sense">Sense</span>
-      <span class="ver" id="verTag">v16</span>
+      <span class="ver" id="verTag">v17</span>
     </div>
     <div class="traffic">
       <div class="tl min" data-action="minimize" title="Minimize"></div>
@@ -485,105 +584,156 @@
     </div>
   </div>
 
-  <div class="hero">
-    <img src="./1329760.jpeg" alt="">
-    <div class="hero-tag"><i></i>Counter-Strike 2</div>
+  <!-- ------------------------------------------------------------- login -->
+  <div class="view view-login" id="viewLogin">
+    <div class="hero">
+      <img src="./1329760.jpeg" alt="">
+      <div class="hero-tag"><i></i>Counter-Strike 2</div>
+    </div>
+
+    <form class="login" id="loginForm" autocomplete="off" novalidate>
+      <div class="login-title">
+        <h1>Sign in</h1>
+        <span id="loginHint">account required</span>
+      </div>
+
+      <label class="field" id="userField">
+        <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+        <input id="userInput" type="text" placeholder="username" spellcheck="false" autocomplete="username" maxlength="32">
+      </label>
+
+      <label class="field" id="passField">
+        <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z"/></svg>
+        <input id="passInput" type="password" placeholder="password" autocomplete="current-password" maxlength="64">
+        <button class="peek" type="button" id="peekBtn" title="Show password" aria-label="Show password">
+          <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/></svg>
+        </button>
+      </label>
+
+      <div class="login-row">
+        <div class="remember on" id="remember" role="checkbox" aria-checked="true" tabindex="0">
+          <span class="tick"></span><span>Keep me signed in</span>
+        </div>
+      </div>
+
+      <div class="login-msg" id="loginMsg"></div>
+
+      <button class="inject-btn" type="submit" id="loginBtn">
+        <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10zM4 3h16v18H4z" opacity=".45"/><path d="M14 12l-4 4V8l4 4z"/></svg>
+        <span id="loginLabel">Sign in</span>
+      </button>
+    </form>
   </div>
 
-  <div class="body">
-
-    <div class="field" id="keyField">
-      <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z"/></svg>
-      <input id="keyInput" type="text" placeholder="LICENSE KEY" maxlength="32" spellcheck="false" autocomplete="off">
-      <span class="field-state" id="keyState">UNVERIFIED</span>
+  <!-- --------------------------------------------------------------- app -->
+  <div class="view view-app off" id="viewApp">
+    <div class="hero">
+      <img src="./1329760.jpeg" alt="">
+      <div class="hero-tag"><i></i>Counter-Strike 2</div>
     </div>
 
-    <div class="status-grid">
-      <div class="stat"><span class="k">game</span><span class="v" id="statGame"><i></i>scanning</span></div>
-      <div class="stat"><span class="k">build</span><span class="v" id="statBuild"><i></i>14192</span></div>
-      <div class="stat"><span class="k">session</span><span class="v" id="statSession"><i></i>offline</span></div>
-      <div class="stat"><span class="k">uptime</span><span class="v" id="statUptime"><i></i>00:00</span></div>
+    <div class="body">
+      <div class="status-grid">
+        <div class="stat"><span class="k">game</span><span class="v" id="statGame"><i></i>scanning</span></div>
+        <div class="stat"><span class="k">build</span><span class="v" id="statBuild"><i></i>14192</span></div>
+        <div class="stat"><span class="k">account</span><span class="v" id="statUser"><i></i>—</span></div>
+        <div class="stat"><span class="k">uptime</span><span class="v" id="statUptime"><i></i>00:00</span></div>
+      </div>
+
+      <div class="progress" id="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="log" id="log"></div>
+
+      <button class="inject-btn" id="injectBtn">
+        <svg viewBox="0 0 24 24"><path d="M20 4l-7 9v6l-2 2-2-2v-6l-6-8 9 5 6-6z"/></svg>
+        <span id="injectLabel">Initialize</span>
+      </button>
+
+      <div class="foot">
+        <span>bloodsense.online</span>
+        <span id="footState">signed in</span>
+      </div>
     </div>
-
-    <div class="progress" id="progress"><div class="progress-fill" id="progressFill"></div></div>
-
-    <div class="log" id="log"></div>
-
-    <button class="inject-btn" id="injectBtn">
-      <svg viewBox="0 0 24 24"><path d="M20 4l-7 9v6l-2 2-2-2v-6l-6-8 9 5 6-6z"/></svg>
-      <span id="injectLabel">Initialize</span>
-    </button>
-
-    <div class="foot">
-      <span>bloodsense.online</span>
-      <span id="footState">idle</span>
-    </div>
-
   </div>
+
 </div>
 
 <script>
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
 
-  const loader     = $("#loader");
-  const titlebar   = $("#titlebar");
-  const injectBtn  = $("#injectBtn");
-  const injectLbl  = $("#injectLabel");
-  const progress   = $("#progress");
-  const fill       = $("#progressFill");
-  const logEl      = $("#log");
-  const keyInput   = $("#keyInput");
-  const keyState   = $("#keyState");
-  const footState  = $("#footState");
+  const loader    = $("#loader");
+  const titlebar  = $("#titlebar");
+  const viewLogin = $("#viewLogin");
+  const viewApp   = $("#viewApp");
+  const loginForm = $("#loginForm");
+  const userInput = $("#userInput");
+  const passInput = $("#passInput");
+  const loginBtn  = $("#loginBtn");
+  const loginLbl  = $("#loginLabel");
+  const loginMsg  = $("#loginMsg");
+  const remember  = $("#remember");
+  const injectBtn = $("#injectBtn");
+  const injectLbl = $("#injectLabel");
+  const progress  = $("#progress");
+  const fill      = $("#progressFill");
+  const logEl     = $("#log");
 
-  const bridge = window.chrome && window.chrome.webview;
+  const bridge = (window.chrome && window.chrome.webview) || null;
   const hosted = !!bridge;
-
   const send = (type, data) => {
-    if (hosted) {
-      bridge.postMessage({ type, data: data || {} });
-    } else {
-      console.log("[bridge]", type, data || {});
-    }
+    if (bridge) bridge.postMessage({ type, data: data || {} });
   };
+
+  const SESSION_KEY = "bloodsense.session";
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* Local credential table. Swap this for the licence endpoint later; the
+     UI only ever sees the ok/fail result. */
+  const ACCOUNTS = { anonymous: "x" };
 
   /* ------------------------------------------------------------- logging */
   const stamp = () => new Date().toTimeString().slice(0, 8);
   const log = (msg, kind) => {
     const line = document.createElement("div");
     line.className = "log-line" + (kind ? " " + kind : "");
-    line.innerHTML = '<span class="t">' + stamp() + '</span><span></span>';
-    line.lastChild.textContent = msg;
+    const t = document.createElement("span");
+    t.className = "t";
+    t.textContent = stamp();
+    const m = document.createElement("span");
+    m.textContent = msg;
+    line.append(t, m);
     logEl.appendChild(line);
     while (logEl.children.length > 4) logEl.firstChild.remove();
   };
 
-  /* ------------------------------------------------------------ progress */
   const setProgress = (pct) => {
     progress.classList.toggle("on", pct > 0 && pct < 100);
     fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
   };
 
-  /* -------------------------------------------------------------- status */
   const setStat = (el, text, tone) => {
     if (!el) return;
     el.className = "v" + (tone ? " " + tone : "");
-    el.innerHTML = "<i></i>";
+    el.replaceChildren();
+    el.appendChild(document.createElement("i"));
     el.appendChild(document.createTextNode(text));
   };
 
-  /* ------------------------------------------------------ window controls */
+  /* --------------------------------------------------------------- height */
+  const settleHeight = () => {
+    const active = viewLogin.classList.contains("off") ? viewApp : viewLogin;
+    if (!active) return;
+    loader.style.height = (titlebar.offsetHeight + active.offsetHeight + 2) + "px";
+  };
+
+  /* ------------------------------------------------------- window controls */
   document.querySelectorAll(".tl").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const action = btn.dataset.action;
       send("window", { action });
-      if (action === "close" && !hosted) {
-        loader.classList.add("hidden");
-        setTimeout(() => loader.classList.remove("hidden"), 900);
-      }
-      if (action === "minimize" && !hosted) {
+      if (!hosted && (action === "close" || action === "minimize")) {
         loader.classList.add("hidden");
         setTimeout(() => loader.classList.remove("hidden"), 900);
       }
@@ -591,9 +741,10 @@
   });
 
   /* ----------------------------------------------------------------- drag */
-  let drag = null, rafId = null;
+  let drag = null;
+  let dragRaf = 0;
   titlebar.addEventListener("mousedown", (e) => {
-    if (e.target.closest(".tl")) return;
+    if (e.button !== 0 || e.target.closest(".tl")) return;
     const rect = loader.getBoundingClientRect();
     drag = { x: e.clientX, y: e.clientY, ox: rect.left, oy: rect.top };
     loader.style.position = "fixed";
@@ -605,24 +756,24 @@
   });
   window.addEventListener("mousemove", (e) => {
     if (!drag) return;
-    const dx = e.clientX - drag.x;
-    const dy = e.clientY - drag.y;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(() => {
-      loader.style.left = drag.ox + dx + "px";
-      loader.style.top = drag.oy + dy + "px";
+    const nx = drag.ox + e.clientX - drag.x;
+    const ny = drag.oy + e.clientY - drag.y;
+    if (dragRaf) cancelAnimationFrame(dragRaf);
+    dragRaf = requestAnimationFrame(() => {
+      loader.style.left = nx + "px";
+      loader.style.top = ny + "px";
     });
-  });
+  }, { passive: true });
   window.addEventListener("mouseup", () => {
     if (!drag) return;
     drag = null;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = null;
+    if (dragRaf) cancelAnimationFrame(dragRaf);
+    dragRaf = 0;
   });
 
   /* ------------------------------------------------------------- hide key */
   document.addEventListener("keydown", (e) => {
-    if (hosted) return; // host owns the toggle inside the loader window
+    if (hosted) return;
     if (e.key === "Insert" || e.key === "Escape") {
       if (e.target.tagName === "INPUT") return;
       e.preventDefault();
@@ -630,90 +781,134 @@
     }
   });
 
-  /* ------------------------------------------------------------ key input */
-  const KEY_BACKEND = false; // flip on when the licence endpoint exists
-  const normalize = (v) => v.replace(/[^A-Za-z0-9-]/g, "").toUpperCase();
-
-  const setKeyState = (text, tone) => {
-    keyState.textContent = text;
-    keyState.className = "field-state" + (tone ? " " + tone : "");
+  /* ------------------------------------------------------------- remember */
+  const setRemember = (on) => {
+    remember.classList.toggle("on", on);
+    remember.setAttribute("aria-checked", on ? "true" : "false");
   };
-
-  const verifyKey = () => {
-    const key = normalize(keyInput.value);
-    if (!key) {
-      setKeyState("UNVERIFIED", "");
-      return;
-    }
-    if (!KEY_BACKEND) {
-      // Offline build: the key is echoed to the host and stored locally only.
-      try { localStorage.setItem("bloodsense.key", key); } catch (_) {}
-      send("key_submit", { key });
-      setKeyState("HELD", "ok");
-      log("key staged " + key.slice(0, 4) + "...", "ok");
-      return;
-    }
-    setKeyState("CHECKING", "");
-    send("key_submit", { key });
-  };
-
-  keyInput.addEventListener("input", () => {
-    keyInput.value = normalize(keyInput.value);
-  });
-  keyInput.addEventListener("blur", verifyKey);
-  keyInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
+  remember.addEventListener("click", () => setRemember(!remember.classList.contains("on")));
+  remember.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      verifyKey();
-      injectBtn.focus();
+      setRemember(!remember.classList.contains("on"));
     }
   });
 
-  try {
-    const saved = localStorage.getItem("bloodsense.key");
-    if (saved) keyInput.value = saved;
-  } catch (_) {}
+  $("#peekBtn").addEventListener("click", () => {
+    const showing = passInput.type === "text";
+    passInput.type = showing ? "password" : "text";
+    $("#peekBtn").style.color = showing ? "" : "var(--accent)";
+    passInput.focus();
+  });
 
-  /* -------------------------------------------------------------- session */
+  /* ---------------------------------------------------------------- login */
+  let failTimer = 0;
+
+  const failLogin = (text) => {
+    loginMsg.textContent = text;
+    loginMsg.classList.add("show");
+    $("#userField").classList.add("err");
+    $("#passField").classList.add("err");
+    if (!reduceMotion) {
+      loader.classList.remove("shake");
+      void loader.offsetWidth;
+      loader.classList.add("shake");
+    }
+    clearTimeout(failTimer);
+    failTimer = setTimeout(() => {
+      loginMsg.classList.remove("show");
+      $("#userField").classList.remove("err");
+      $("#passField").classList.remove("err");
+    }, 2400);
+  };
+
+  const openApp = (user) => {
+    viewLogin.classList.add("off");
+    viewApp.classList.remove("off");
+    viewApp.classList.add("view-enter");
+    setTimeout(() => viewApp.classList.remove("view-enter"), 400);
+    loader.dataset.state = "idle";
+    setStat($("#statUser"), user, "ok");
+    settleHeight();
+    log("session opened for " + user, "ok");
+    log("loader ready", "hl");
+    setTimeout(() => injectBtn.focus(), 60);
+  };
+
+  const tryLogin = (user, pass) => {
+    const name = String(user || "").trim().toLowerCase();
+    if (!name || !pass) {
+      failLogin("enter a username and password");
+      return false;
+    }
+    if (!Object.prototype.hasOwnProperty.call(ACCOUNTS, name) || ACCOUNTS[name] !== pass) {
+      failLogin("invalid credentials");
+      send("login_fail", { user: name });
+      return false;
+    }
+    send("login_ok", { user: name });
+    if (remember.classList.contains("on")) {
+      try { localStorage.setItem(SESSION_KEY, name); } catch (_) {}
+    }
+    openApp(name);
+    return true;
+  };
+
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (loginBtn.disabled) return;
+    loginBtn.disabled = true;
+    loginLbl.textContent = "Checking";
+    setTimeout(() => {
+      tryLogin(userInput.value, passInput.value);
+      loginBtn.disabled = false;
+      loginLbl.textContent = "Sign in";
+    }, 260);
+  });
+
+  [userInput, passInput].forEach((el) =>
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        loginForm.requestSubmit();
+      }
+    })
+  );
+
+  /* --------------------------------------------------------------- session */
+  let sessionUser = null;
+  try { sessionUser = localStorage.getItem(SESSION_KEY); } catch (_) {}
+
+  const signOut = () => {
+    try { localStorage.removeItem(SESSION_KEY); } catch (_) {}
+    viewApp.classList.add("off");
+    viewLogin.classList.remove("off");
+    viewLogin.classList.add("view-enter");
+    setTimeout(() => viewLogin.classList.remove("view-enter"), 400);
+    setProgress(0);
+    injectBtn.disabled = false;
+    injectBtn.classList.remove("ok");
+    injectLbl.textContent = "Initialize";
+    passInput.value = "";
+    loader.dataset.state = "login";
+    settleHeight();
+    send("logout", {});
+    userInput.focus();
+  };
+
+  /* ------------------------------------------------------------------ app */
   const t0 = Date.now();
   setInterval(() => {
     const s = Math.floor((Date.now() - t0) / 1000);
-    const mm = String(Math.floor(s / 60)).padStart(2, "0");
-    const ss = String(s % 60).padStart(2, "0");
-    setStat($("#statUptime"), mm + ":" + ss, "");
+    setStat(
+      $("#statUptime"),
+      String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"),
+      ""
+    );
   }, 1000);
 
   setStat($("#statGame"), hosted ? "attached" : "browser", hosted ? "ok" : "warn");
-  setStat($("#statSession"), hosted ? "live" : "preview", hosted ? "ok" : "warn");
-  footState.textContent = hosted ? "connected" : "preview";
 
-  /* ----------------------------------------------------------- boot plane */
-  const bootScreen = $("#bootScreen");
-  const bootText = $("#bootText");
-  const bootBar = $("#bootBar");
-  const bootSteps = [
-    [22, "init core"],
-    [46, "resolve endpoints"],
-    [68, "handshake"],
-    [88, "load modules"],
-    [100, "ready"]
-  ];
-
-  let bi = 0;
-  const bootTimer = setInterval(() => {
-    if (bi >= bootSteps.length) {
-      clearInterval(bootTimer);
-      bootScreen.classList.add("hide");
-      setTimeout(() => bootScreen.remove(), 320);
-      log("loader ready", "hl");
-      return;
-    }
-    const [pct, msg] = bootSteps[bi++];
-    bootText.textContent = msg;
-    bootBar.style.width = pct + "%";
-  }, 420);
-
-  /* -------------------------------------------------------------- inject */
   const stepLabels = [
     [14, "resolving endpoints"],
     [32, "fetching module"],
@@ -734,17 +929,16 @@
     setProgress(0);
     if (ok) {
       setStat($("#statGame"), "attached", "ok");
-      setStat($("#statSession"), "live", "ok");
       log("inject complete" + (detail ? " " + detail : ""), "ok");
-      footState.textContent = "running";
+      $("#footState").textContent = "running";
     } else {
       setStat($("#statGame"), "not found", "warn");
       log(detail || "inject failed", "err");
-      footState.textContent = "error";
+      $("#footState").textContent = "error";
     }
   };
 
-  const run = () => {
+  injectBtn.addEventListener("click", () => {
     if (busy) return;
     busy = true;
     loader.dataset.state = "busy";
@@ -752,7 +946,7 @@
     injectBtn.classList.remove("ok");
     injectLbl.textContent = "Initializing";
     log("inject requested", "hl");
-    send("inject_begin", { key: normalize(keyInput.value), game: "cs2" });
+    send("inject_begin", { user: sessionUser || "anonymous", game: "cs2" });
 
     let i = 0;
     const tick = () => {
@@ -764,46 +958,71 @@
       setProgress(pct);
       injectLbl.textContent = msg.toUpperCase();
       log(msg);
-      setTimeout(tick, 380 + Math.random() * 220);
+      setTimeout(tick, 360 + Math.random() * 200);
     };
-    setTimeout(tick, 180);
-  };
+    setTimeout(tick, 160);
+  });
 
-  injectBtn.addEventListener("click", run);
+  /* ----------------------------------------------------------- boot plane */
+  const bootScreen = $("#bootScreen");
+  const bootText = $("#bootText");
+  const bootBar = $("#bootBar");
+  const bootSteps = [
+    [24, "init core"],
+    [48, "resolve endpoints"],
+    [72, "handshake"],
+    [100, "ready"]
+  ];
+
+  let bi = 0;
+  setStat($("#statGame"), "scanning", "");
+
+  const bootTimer = setInterval(() => {
+    if (bi >= bootSteps.length) {
+      clearInterval(bootTimer);
+      bootScreen.classList.add("hide");
+      setTimeout(() => bootScreen.remove(), 320);
+      if (sessionUser) openApp(sessionUser);
+      else {
+        loader.dataset.state = "login";
+        settleHeight();
+        setTimeout(() => userInput.focus(), 120);
+      }
+      return;
+    }
+    const [pct, msg] = bootSteps[bi++];
+    bootText.textContent = msg;
+    bootBar.style.width = pct + "%";
+  }, 400);
 
   /* --------------------------------------------------------- host messages */
   if (hosted) {
     bridge.addEventListener("message", (e) => {
       const msg = e.data || {};
-      const type = msg.type;
       const data = msg.data || {};
-
-      if (type === "status") {
+      if (msg.type === "status") {
         if (data.game) setStat($("#statGame"), data.game, data.ok ? "ok" : "warn");
         if (typeof data.build === "string") setStat($("#statBuild"), data.build, "");
         log(data.text || "status", data.ok ? "ok" : "");
-      } else if (type === "progress" && typeof data.pct === "number") {
+      } else if (msg.type === "progress" && typeof data.pct === "number") {
         setProgress(data.pct);
-      } else if (type === "inject_ok") {
+      } else if (msg.type === "inject_ok") {
         finish(true, data.detail || "");
-      } else if (type === "inject_fail") {
+      } else if (msg.type === "inject_fail") {
         finish(false, data.text || "inject failed");
-      } else if (type === "key_result") {
-        if (data.ok) {
-          setKeyState("VERIFIED", "ok");
-          log("key verified", "ok");
-        } else {
-          setKeyState("DENIED", "err");
-          log(data.text || "key denied", "err");
-        }
-      } else if (type === "set_version" && data.version) {
+      } else if (msg.type === "login_result") {
+        if (!data.ok) failLogin(data.text || "invalid credentials");
+      } else if (msg.type === "force_logout") {
+        signOut();
+      } else if (msg.type === "set_version" && data.version) {
         $("#verTag").textContent = data.version;
-      } else if (type === "ready") {
-        log("host handshake", "ok");
       }
     });
-    send("ready", { page: "loader" });
+    send("loader_ready", { page: "loader" });
   }
+
+  window.addEventListener("resize", settleHeight, { passive: true });
+  settleHeight();
 })();
 </script>
 </body>

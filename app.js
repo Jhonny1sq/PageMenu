@@ -1,146 +1,178 @@
 (() => {
-  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const $ = (sel, root = document) => root.querySelector(sel);
 
+  const stage = $("#stage");
   const wrapper = $("#wrapper");
   const topbar = $("#topbar");
+  const body = $("#body");
   const masterToggle = $("#masterToggle");
+  const toastEl = $("#toast");
 
-  // Inside BloodSense the host window owns show/hide and the Insert key.
-  const hosted = !!(window.chrome && window.chrome.webview);
+  // Inside BloodSense the host window owns show/hide and the toggle key,
+  // so the page must not install its own Insert handler.
+  const bridge = (window.chrome && window.chrome.webview) || null;
+  const hosted = !!bridge;
 
-  const STORAGE_KEY = "bloodsense.config.v2";
-  const AUTOSAVE_MS = 1200;
+  const STORAGE_KEY = "bloodsense.config.v3";
+  const AUTOSAVE_MS = 900;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let activeTab = "aim";
-  let fitScale = 1;
   let storedScale = 1;
+  let busy = false; // true while capturing a keybind
 
-  /* ------------------------------------------------------------- toast */
+  /* --------------------------------------------------------------- bridge */
 
-  const toastEl = $("#toast");
+  const post = (type, data) => {
+    if (bridge) bridge.postMessage({ type, data: data || {} });
+  };
+
+  /* ---------------------------------------------------------------- toast */
+
   let toastTimer = 0;
-  const toast = (msg, kind) => {
+  const toast = (msg, tone) => {
     if (!toastEl) return;
     toastEl.textContent = msg;
-    toastEl.classList.toggle("err", kind === "err");
+    toastEl.classList.toggle("err", tone === "err");
     toastEl.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1600);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1500);
   };
 
-  /* ---------------------------------------------------------------- fit */
+  /* -------------------------------------------------------------- fit/scale */
 
-  // The game window can be any size. Scale the whole panel down rather than
-  // letting the fixed 860x590 layout overflow off-screen.
+  let fitRaf = 0;
   const fit = () => {
-    const stage = $("#stage");
-    if (!stage || wrapper.classList.contains("dragging")) return;
-    const availW = stage.clientWidth - 32;
-    const availH = stage.clientHeight - 32;
+    if (!stage) return;
+    fitRaf = 0;
+    const availW = stage.clientWidth - 24;
+    const availH = stage.clientHeight - 24;
     const w = wrapper.offsetWidth * storedScale;
     const h = wrapper.offsetHeight * storedScale;
-    fitScale = Math.min(1, availW / w, availH / h);
-    wrapper.style.transform = `scale(${(storedScale * fitScale).toFixed(4)})`;
+    const ratio = Math.min(1, availW / w, availH / h);
+    wrapper.style.transform = `scale(${(storedScale * ratio).toFixed(4)})`;
+  };
+  const queueFit = () => {
+    if (fitRaf) return;
+    fitRaf = requestAnimationFrame(fit);
+  };
+  window.addEventListener("resize", queueFit, { passive: true });
+
+  /* --------------------------------------------------------------- animate */
+
+  // Stagger the rows of the incoming pane. Index comes from DOM order so the
+  // delay stays correct no matter how many controls each box holds.
+  const animatePane = (pane) => {
+    if (reduceMotion || !pane) return;
+    const rows = $$(".row, .slider-row", pane);
+    rows.forEach((row, i) => {
+      row.style.animation = "none";
+      row.style.animationDelay = Math.min(i, 14) * 16 + "ms";
+      void row.offsetWidth;
+      row.style.animation = "";
+    });
   };
 
-  /* ---------------------------------------------------------------- tabs */
+  /* ------------------------------------------------------------------ tabs */
 
-  const syncMasterScope = () => {
-    masterToggle.dataset.scope = activeTab;
+  const setTab = (key, animate = true) => {
+    if (key === activeTab) return;
+    activeTab = key;
+    $$(".tab").forEach((t) => {
+      const on = t.dataset.tab === key;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    $$(".pane").forEach((p) => p.classList.toggle("active", p.dataset.pane === key));
+    body.scrollTop = 0;
+    if (animate) animatePane($(".pane.active"));
+    queueFit();
+    scheduleSave();
   };
 
   $$(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const key = tab.dataset.tab;
-      if (key === activeTab) return;
-      activeTab = key;
-      $$(".tab").forEach((t) => {
-        const on = t === tab;
-        t.classList.toggle("active", on);
-        t.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      $$(".pane").forEach((p) => p.classList.toggle("active", p.dataset.pane === key));
-      syncMasterScope();
-      $("#body").scrollTop = 0;
-      scheduleSave();
-    });
+    tab.addEventListener("click", () => setTab(tab.dataset.tab));
   });
-  syncMasterScope();
 
-  /* ------------------------------------------------------------ bar/scale */
+  /* ------------------------------------------------------------ layout */
 
   const posSel = $("#barPos");
   const applyBar = (pos) => {
     wrapper.dataset.bar = pos;
-    requestAnimationFrame(fit);
+    queueFit();
   };
-  if (posSel) {
-    posSel.addEventListener("change", () => {
-      applyBar(posSel.value);
-      toast("tabs: " + posSel.value);
-      scheduleSave();
-    });
-    applyBar(posSel.value || "top");
-  }
+  posSel?.addEventListener("change", () => {
+    applyBar(posSel.value);
+    toast("tabs: " + posSel.value);
+    scheduleSave();
+  });
+  applyBar(posSel?.value || "top");
 
   const scaleSel = $("#uiScale");
-  const applyScale = (s) => {
-    storedScale = parseFloat(s) || 1;
-    fit();
+  const applyScale = (value) => {
+    storedScale = parseFloat(value) || 1;
+    queueFit();
   };
-  if (scaleSel) {
-    scaleSel.addEventListener("change", () => {
-      applyScale(scaleSel.value);
-      toast("scale: " + Math.round(storedScale * 100) + "%");
-      scheduleSave();
-    });
-    applyScale(scaleSel.value || "1");
-  }
+  scaleSel?.addEventListener("change", () => {
+    applyScale(scaleSel.value);
+    toast("scale: " + Math.round(storedScale * 100) + "%");
+    scheduleSave();
+  });
+  applyScale(scaleSel?.value || "1");
 
-  window.addEventListener("resize", fit);
-
-  /* --------------------------------------------------------------- drag */
+  /* ------------------------------------------------------------------ drag */
 
   let drag = null;
-  let rafId = null;
+  let dragRaf = 0;
 
   topbar.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
     if (e.target.closest(".tab, .btn, .master-toggle, .dropdown")) return;
     const rect = wrapper.getBoundingClientRect();
-    drag = { startX: e.clientX, startY: e.clientY, originX: rect.left, originY: rect.top };
+    drag = { x: e.clientX, y: e.clientY, ox: rect.left, oy: rect.top };
     wrapper.style.transform = "none";
     wrapper.style.position = "fixed";
     wrapper.style.left = rect.left + "px";
     wrapper.style.top = rect.top + "px";
-    wrapper.style.margin = "0";
     wrapper.classList.add("dragging");
     e.preventDefault();
   });
 
-  window.addEventListener("mousemove", (e) => {
-    if (!drag) return;
-    const dx = e.clientX - drag.startX;
-    const dy = e.clientY - drag.startY;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(() => {
-      wrapper.style.left = drag.originX + dx + "px";
-      wrapper.style.top = drag.originY + dy + "px";
-    });
-  });
+  window.addEventListener(
+    "mousemove",
+    (e) => {
+      if (!drag) return;
+      const nx = drag.ox + e.clientX - drag.x;
+      const ny = drag.oy + e.clientY - drag.y;
+      if (dragRaf) cancelAnimationFrame(dragRaf);
+      dragRaf = requestAnimationFrame(() => {
+        wrapper.style.left = nx + "px";
+        wrapper.style.top = ny + "px";
+      });
+    },
+    { passive: true }
+  );
 
   window.addEventListener("mouseup", () => {
     if (!drag) return;
     drag = null;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = null;
+    if (dragRaf) cancelAnimationFrame(dragRaf);
+    dragRaf = 0;
     wrapper.classList.remove("dragging");
+    // Dragging is a browser preview affordance only; the host positions us.
+    if (hosted) {
+      wrapper.style.position = "";
+      wrapper.style.left = "";
+      wrapper.style.top = "";
+      queueFit();
+    }
   });
 
-  /* ------------------------------------------------------------- hide key */
+  /* ----------------------------------------------------------------- hidе */
 
   document.addEventListener("keydown", (e) => {
-    if (hosted) return; // host handles visibility, page must not fight it
+    if (hosted) return;
     if (e.key !== "Insert" && e.key !== "Escape") return;
     const tag = e.target.tagName;
     if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
@@ -148,12 +180,16 @@
     wrapper.classList.toggle("hidden");
   });
 
-  /* -------------------------------------------------------- master switch */
+  /* --------------------------------------------------------- master switch */
 
-  const flipMaster = () => {
-    masterToggle.classList.toggle("on");
-    const on = masterToggle.classList.contains("on");
+  const setMaster = (on) => {
+    masterToggle.classList.toggle("on", on);
     masterToggle.setAttribute("aria-checked", on ? "true" : "false");
+  };
+  const flipMaster = () => {
+    const on = !masterToggle.classList.contains("on");
+    setMaster(on);
+    post("master", { on });
     toast(on ? "master on" : "master off");
     scheduleSave();
   };
@@ -165,43 +201,48 @@
     }
   });
 
-  /* ----------------------------------------------------------- checkboxes */
+  /* ------------------------------------------------------------- checkboxes */
 
-  const toggleBox = (box) => {
-    const row = box.closest(".row");
-    if (!row) return;
-    row.classList.toggle("on");
-    box.setAttribute("aria-checked", row.classList.contains("on") ? "true" : "false");
-    box.classList.remove("pop");
-    void box.offsetWidth;
-    box.classList.add("pop");
+  const setRow = (row, on) => {
+    row.classList.toggle("on", on);
+    const box = row.querySelector(".cbox");
+    if (box) box.setAttribute("aria-checked", on ? "true" : "false");
+    return box;
+  };
+
+  const toggleRow = (row) => {
+    const on = !row.classList.contains("on");
+    const box = setRow(row, on);
+    if (box && !reduceMotion) {
+      box.classList.remove("pop");
+      void box.offsetWidth;
+      box.classList.add("pop");
+    }
+    post("toggle", { key: row.dataset.feature || row.textContent.trim(), on });
     scheduleSave();
   };
 
   document.addEventListener("click", (e) => {
+    if (busy) return;
     const box = e.target.closest(".cbox");
-    if (box) {
-      e.stopPropagation();
-      toggleBox(box);
-      return;
-    }
-    const row = e.target.closest(".row[data-toggle]");
+    const row = box ? box.closest(".row") : e.target.closest(".row[data-toggle]");
     if (!row) return;
-    const cb = row.querySelector(".cbox");
-    if (cb) toggleBox(cb);
+    e.stopPropagation();
+    toggleRow(row);
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
-    const box = e.target.closest && e.target.closest(".cbox");
-    if (!box) return;
+    if (!e.target.classList?.contains("cbox")) return;
+    const row = e.target.closest(".row");
+    if (!row) return;
     e.preventDefault();
-    toggleBox(box);
+    toggleRow(row);
   });
 
-  /* -------------------------------------------------------------- sliders */
+  /* ---------------------------------------------------------------- sliders */
 
-  const buildSlider = (row) => {
+  const setupSlider = (row) => {
     const track = row.querySelector(".slider-track");
     const fill = row.querySelector(".slider-fill");
     const thumb = row.querySelector(".slider-thumb");
@@ -227,20 +268,22 @@
 
     const commit = () => {
       paint();
+      post("slider", { key: row.dataset.feature || "", value: input.value });
       scheduleSave();
     };
 
-    input.addEventListener("input", paint);
+    input.addEventListener("input", paint, { passive: true });
     input.addEventListener("change", commit);
     input.addEventListener("pointerdown", () => tip.classList.add("visible"));
     input.addEventListener("pointerup", () => tip.classList.remove("visible"));
+    input.addEventListener("pointercancel", () => tip.classList.remove("visible"));
     input.addEventListener("pointerleave", () => tip.classList.remove("visible"));
     input.addEventListener("dblclick", () => {
       const def = row.dataset.default;
       if (def == null) return;
       input.value = def;
       commit();
-      toast("reset " + (row.querySelector(".label")?.textContent || ""));
+      toast("reset to " + def);
     });
     paint();
 
@@ -255,9 +298,94 @@
       commit();
     });
   };
-  $$(".slider-row").forEach(buildSlider);
+  $$(".slider-row").forEach(setupSlider);
 
-  /* -------------------------------------------------------------- profile */
+  /* --------------------------------------------------------------- keybinds */
+
+  const KEY_LABELS = {
+    " ": "SPACE",
+    ArrowUp: "UP",
+    ArrowDown: "DOWN",
+    ArrowLeft: "LEFT",
+    ArrowRight: "RIGHT",
+    Control: "CTRL",
+    Shift: "SHIFT",
+    Alt: "ALT",
+    Escape: "ESC",
+    Backspace: "BACKSPACE"
+  };
+
+  const labelFor = (e) => {
+    if (KEY_LABELS[e.key]) return KEY_LABELS[e.key];
+    if (e.key.length === 1) return e.key.toUpperCase();
+    return e.key.toUpperCase();
+  };
+
+  const keybinds = {};
+  $$(".keybind").forEach((chip) => {
+    keybinds[chip.dataset.keybind] = chip.dataset.value;
+  });
+
+  const paintKeybinds = () => {
+    $$(".keybind").forEach((chip) => {
+      chip.textContent = keybinds[chip.dataset.keybind] || "—";
+    });
+    const hint = $("#footHint");
+    if (hint) hint.textContent = keybinds.toggle + " to hide · drag the bar to move";
+  };
+
+  let capturing = null;
+
+  const stopCapture = () => {
+    if (capturing) capturing.classList.remove("listening");
+    capturing = null;
+    busy = false;
+  };
+
+  $$(".keybind").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      if (capturing === chip) return stopCapture();
+      stopCapture();
+      capturing = chip;
+      busy = true;
+      chip.classList.add("listening");
+      chip.textContent = "PRESS KEY";
+    });
+    chip.addEventListener("blur", () => {
+      if (capturing === chip) {
+        stopCapture();
+        paintKeybinds();
+      }
+    });
+  });
+
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (!capturing) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.key === "Escape") {
+        stopCapture();
+        paintKeybinds();
+        return;
+      }
+
+      const name = labelFor(e);
+      const slot = capturing.dataset.keybind;
+      keybinds[slot] = name;
+      capturing.dataset.value = name;
+      stopCapture();
+      paintKeybinds();
+      post("keybind", { slot, key: name });
+      toast(slot + ": " + name);
+      scheduleSave();
+    },
+    true
+  );
+
+  /* --------------------------------------------------------------- dropdowns */
 
   const profileSel = $("#profile");
   const footProfile = $("#footProfile");
@@ -265,84 +393,72 @@
     if (!profileSel || !footProfile) return;
     footProfile.textContent = "PROFILE: " + profileSel.value.toUpperCase();
   };
-  if (profileSel) {
-    profileSel.addEventListener("change", () => {
-      syncProfile();
-      toast("profile: " + profileSel.value);
-      scheduleSave();
-    });
+  profileSel?.addEventListener("change", () => {
     syncProfile();
-  }
+    toast("profile: " + profileSel.value);
+    post("profile", { name: profileSel.value });
+    scheduleSave();
+  });
+  syncProfile();
 
-  const keySel = $("#menuKey");
-  const kbdToggle = $("#kbdToggle");
-  if (keySel) {
-    keySel.addEventListener("change", () => {
-      if (kbdToggle) kbdToggle.textContent = keySel.value;
-      toast("menu key: " + keySel.value);
+  $$(".dropdown[data-key]").forEach((sel) => {
+    sel.addEventListener("change", () => {
+      post("option", { key: sel.dataset.key, value: sel.value });
       scheduleSave();
     });
-  }
+  });
 
-  /* ------------------------------------------------------- save / restore */
-
-  const flash = (btn) => {
-    btn.classList.add("flash");
-    setTimeout(() => btn.classList.remove("flash"), 600);
-  };
+  /* ------------------------------------------------------------------ store */
 
   const snapshot = () => ({
-    v: 2,
+    v: 3,
     toggles: $$(".row[data-toggle]").map((r) => r.classList.contains("on")),
     sliders: $$(".slider-row input[type='range']").map((i) => i.value),
+    selects: $$(".dropdown").map((s) => s.value),
     master: masterToggle.classList.contains("on"),
     bar: wrapper.dataset.bar || "top",
-    scale: scaleSel ? scaleSel.value : "1",
-    profile: profileSel ? profileSel.value : "default",
-    menuKey: keySel ? keySel.value : "INSERT",
+    scale: scaleSel?.value || "1",
+    profile: profileSel?.value || "default",
+    keybinds: { ...keybinds },
     tab: activeTab
   });
 
-  const restore = (s) => {
+  const apply = (s) => {
     if (!s) return;
 
-    $$(".row[data-toggle]").forEach((r, i) => {
+    if (s.v !== 3) {
+      // Older layouts had a different control order; start clean instead of
+      // mapping stale indices onto unrelated toggles.
+      toast("old profile ignored", "err");
+      return;
+    }
+
+    $$(".row[data-toggle]").forEach((row, i) => {
       if (!s.toggles || s.toggles[i] == null) return;
-      r.classList.toggle("on", !!s.toggles[i]);
-      const cb = r.querySelector(".cbox");
-      if (cb) cb.setAttribute("aria-checked", s.toggles[i] ? "true" : "false");
+      setRow(row, !!s.toggles[i]);
     });
 
-    $$(".slider-row input[type='range']").forEach((i, idx) => {
-      if (!s.sliders || s.sliders[idx] == null) return;
-      i.value = s.sliders[idx];
-      i.dispatchEvent(new Event("input"));
+    $$(".slider-row input[type='range']").forEach((input, i) => {
+      if (!s.sliders || s.sliders[i] == null) return;
+      input.value = s.sliders[i];
+      input.dispatchEvent(new Event("input"));
     });
 
-    masterToggle.classList.toggle("on", !!s.master);
-    masterToggle.setAttribute("aria-checked", s.master ? "true" : "false");
+    $$(".dropdown").forEach((sel, i) => {
+      if (!s.selects || s.selects[i] == null) return;
+      sel.value = s.selects[i];
+    });
 
-    if (s.bar && posSel) {
-      posSel.value = s.bar;
-      applyBar(s.bar);
+    setMaster(!!s.master);
+    if (s.bar) applyBar(s.bar);
+    if (s.scale) applyScale(s.scale);
+    syncProfile();
+    if (s.keybinds) {
+      Object.assign(keybinds, s.keybinds);
+      paintKeybinds();
     }
-    if (s.scale && scaleSel) {
-      scaleSel.value = s.scale;
-      applyScale(s.scale);
-    }
-    if (s.profile && profileSel) {
-      profileSel.value = s.profile;
-      syncProfile();
-    }
-    if (s.menuKey && keySel) {
-      keySel.value = s.menuKey;
-      if (kbdToggle) kbdToggle.textContent = s.menuKey;
-    }
-    if (s.tab) {
-      const tab = $(`.tab[data-tab="${s.tab}"]`);
-      if (tab && !tab.classList.contains("active")) tab.click();
-    }
-    requestAnimationFrame(fit);
+    if (s.tab) setTab(s.tab, false);
+    queueFit();
   };
 
   const writeStore = () => {
@@ -360,10 +476,16 @@
     saveTimer = setTimeout(writeStore, AUTOSAVE_MS);
   }
 
+  const flash = (btn) => {
+    btn.classList.add("flash");
+    setTimeout(() => btn.classList.remove("flash"), 550);
+  };
+
   $("#btnSave").addEventListener("click", (e) => {
     const ok = writeStore();
     flash(e.currentTarget);
     toast(ok ? "config saved" : "save failed", ok ? "" : "err");
+    post("save", { profile: profileSel?.value || "default" });
   });
 
   $("#btnLoad").addEventListener("click", (e) => {
@@ -371,7 +493,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        restore(JSON.parse(raw));
+        apply(JSON.parse(raw));
         ok = true;
       }
     } catch (_) {
@@ -379,6 +501,7 @@
     }
     flash(e.currentTarget);
     toast(ok ? "config loaded" : "nothing stored", ok ? "" : "err");
+    if (ok) post("load", { profile: profileSel?.value || "default" });
   });
 
   $("#btnReset").addEventListener("click", (e) => {
@@ -386,46 +509,58 @@
       localStorage.removeItem(STORAGE_KEY);
     } catch (_) {}
 
-    $$(".row[data-toggle]").forEach((r) => {
-      r.classList.remove("on");
-      const cb = r.querySelector(".cbox");
-      if (cb) cb.setAttribute("aria-checked", "false");
-    });
-
+    $$(".row[data-toggle]").forEach((row) => setRow(row, false));
     $$(".slider-row").forEach((row) => {
       const input = row.querySelector("input[type='range']");
       if (!input || row.dataset.default == null) return;
       input.value = row.dataset.default;
       input.dispatchEvent(new Event("input"));
     });
-
-    masterToggle.classList.remove("on");
-    masterToggle.setAttribute("aria-checked", "false");
+    setMaster(false);
     flash(e.currentTarget);
     toast("reset to defaults");
+    post("reset", {});
   });
 
-  /* --------------------------------------------------------------- uptime */
+  /* ------------------------------------------------------------- uptime/etc */
 
   const t0 = Date.now();
   const upEl = $("#uptime");
   if (upEl) {
     setInterval(() => {
       const s = Math.floor((Date.now() - t0) / 1000);
-      const mm = String(Math.floor(s / 60)).padStart(2, "0");
-      const ss = String(s % 60).padStart(2, "0");
-      upEl.textContent = mm + ":" + ss;
+      upEl.textContent =
+        String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     }, 1000);
   }
 
-  /* ----------------------------------------------------------------- boot */
+  /* ------------------------------------------------------- host interaction */
+
+  if (hosted) {
+    document.documentElement.dataset.host = "webview2";
+    bridge.addEventListener("message", (e) => {
+      const msg = e.data || {};
+      if (msg.type === "set_status" && $("#statusTag")) {
+        const tag = $("#statusTag");
+        tag.innerHTML = "<i></i>";
+        tag.appendChild(document.createTextNode(String(msg.data?.text || "READY")));
+      } else if (msg.type === "set_visible") {
+        wrapper.classList.toggle("hidden", !msg.data?.visible);
+      }
+    });
+    post("ui_ready", { page: "menu" });
+  }
+
+  /* ------------------------------------------------------------------- boot */
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) restore(JSON.parse(raw));
+    if (raw) apply(JSON.parse(raw));
   } catch (_) {}
+  paintKeybinds();
 
-  requestAnimationFrame(() => requestAnimationFrame(fit));
-
-  if (hosted) document.documentElement.dataset.host = "webview2";
+  requestAnimationFrame(() => {
+    fit();
+    animatePane($(".pane.active"));
+  });
 })();
