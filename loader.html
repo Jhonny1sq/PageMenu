@@ -682,7 +682,7 @@
   const bridge = (window.chrome && window.chrome.webview) || null;
   const hosted = !!bridge;
   if (hosted) document.documentElement.classList.add("hosted");
-  const HOST_W = 454;
+  const HOST_W = 462;
   const send = (type, data) => {
     if (bridge) bridge.postMessage({ type, data: data || {} });
   };
@@ -728,7 +728,7 @@
     if (!active) return;
     const h = titlebar.offsetHeight + active.offsetHeight + 2;
     loader.style.height = h + "px";
-    if (hosted) send("window", { action: "resize", w: HOST_W, h: h + 2 });
+    if (hosted) send("window", { action: "resize", w: HOST_W, h: h + 10 });
   };
 
   /* ------------------------------------------------------- window controls */
