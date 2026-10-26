@@ -97,6 +97,19 @@ body {
 .topbar:hover { border-color: #3d3d42; }
 .topbar:active { cursor: grabbing; }
 
+.brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding-right: 13px;
+  border-right: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #f0f0f2;
+  white-space: nowrap;
+}
+
 .tabbar {
   display: flex;
   gap: 3px;
@@ -605,35 +618,6 @@ body {
   z-index: 5;
 }
 .slider-tip.visible { opacity: 1; }
-
-/* ----------------------------------------------------------------- footer */
-
-.footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 26px;
-  padding: 0 14px;
-  border-top: 1px solid #1a1a1c;
-  background: linear-gradient(180deg, #101011 0%, #0c0c0d 100%);
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-  color: var(--text-mute);
-  flex-shrink: 0;
-}
-.foot-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.foot-item b { color: var(--accent); font-weight: 600; }
-.foot-item.dim { color: #45454a; }
-.foot-item .dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 7px var(--accent-glow);
-}
-.foot-sep { width: 1px; height: 10px; background: #222225; }
-.foot-spacer { flex: 1; }
 
 /* ------------------------------------------------------------- side bar */
 
