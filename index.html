@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>panel</title>
+<title>BloodSense</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161618'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='13' font-weight='700' fill='%23ff2a2a' text-anchor='middle'%3EBS%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,253 +12,307 @@
 </head>
 <body>
 
-<div class="wrapper" id="wrapper">
-  <div class="topbar" id="topbar">
-    <div class="tabbar" id="tabbar">
-      <button class="tab active" data-tab="aim" aria-label="Aim" aria-selected="true">
-        <svg viewBox="0 0 24 24"><path d="M21 5v2h-2v1h-4v2h-2v2h-2v2H9v2H5v-2H3v-4H1V7h12V6h2V5h6zm-4 5h-2v2h2v-2z"/></svg>
-      </button>
-      <button class="tab" data-tab="visuals" aria-label="Visuals">
-        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
-      </button>
-      <button class="tab" data-tab="world" aria-label="World">
-        <svg viewBox="0 0 24 24"><path d="M12 4v2.2A5.8 5.8 0 0 0 6.2 12H4v1h2.2A5.8 5.8 0 0 0 12 18.8V21h1v-2.2A5.8 5.8 0 0 0 18.8 13H21v-1h-2.2A5.8 5.8 0 0 0 13 6.2V4h-1zm.5 3.7a4.3 4.3 0 1 1 0 8.6 4.3 4.3 0 0 1 0-8.6zM11 11h2v2h-2z"/></svg>
-      </button>
-      <button class="tab" data-tab="effects" aria-label="Effects">
-        <svg viewBox="0 0 24 24"><path d="M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM11 2h2v3h-2zm0 17h2v3h-2zM2 11h3v2H2zm17 0h3v2h-3z"/></svg>
-      </button>
-      <button class="tab" data-tab="misc" aria-label="Misc">
-        <svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.94 3l2.06 1.4-1.8 3.1-2.35-.85a7 7 0 0 1-1.6.94l-.35 2.4h-3.6l-.35-2.4a7 7 0 0 1-1.6-.94l-2.35.85-1.8-3.1L10.06 11a7.06 7.06 0 0 1 0-2L8.06 7.6l1.8-3.1 2.35.85a7 7 0 0 1 1.6-.94l.35-2.4h3.6l.35 2.4a7 7 0 0 1 1.6.94l2.35-.85 1.8 3.1L20.94 9a7.06 7.06 0 0 1 0 2z"/></svg>
-      </button>
-      <button class="tab" data-tab="config" aria-label="Config">
-        <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4V4zm0 4h16v2H4V8zm0 4h16v2H4v-2zm0 4h16v2H4v-2zm0 4h10v2H4v-2z"/></svg>
-      </button>
-    </div>
+<div class="stage" id="stage">
+  <div class="wrapper" id="wrapper" data-bar="top">
 
-    <div class="topbar-actions">
-      <button class="btn" id="btnSave">SAVE</button>
-      <button class="btn" id="btnLoad">LOAD</button>
-      <button class="btn" id="btnReset">RESET</button>
-      <div class="master-toggle" id="masterToggle" data-scope="aim" tabindex="0" role="switch" aria-checked="false">
-        <span class="master-label">MASTER</span>
-        <div class="switch"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="menu" id="menu">
-    <div class="body" id="body">
-      <div class="pane active" data-pane="aim">
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Player ESP</div>
-            <div class="box-body">
-              <div class="row dim" data-toggle><span class="label">Enable ESP</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="row on" data-toggle><span class="label">Survivors</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Infected</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Special Infected</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Box</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Healthbar</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Name</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Weapons</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="row dim" data-toggle><span class="label">Minigun</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-            </div>
-          </div>
-          <div class="box">
-            <div class="box-header">Colored models</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Player Chams</span><span class="cbox c-purple" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Special Infected Chams</span><span class="cbox c-red" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Skybox Color</span><span class="cbox c-red" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Local Weapon Chams</span><span class="cbox c-red" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Other ESP</div>
-            <div class="box-body">
-              <div class="row dim" data-toggle><span class="label">Fov Modifier</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="row on" data-toggle><span class="label">Viewmodel Modifier</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Viewmodel X</span><span class="val">6</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="10" step="1" value="6"></div>
-              </div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Viewmodel Y</span><span class="val">9</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="10" step="1" value="9"></div>
-              </div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Viewmodel Z</span><span class="val">-9</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="-10" max="10" step="1" value="-9"></div>
-              </div>
-              <div class="row on" data-toggle><span class="label">No Visual Recoil</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-            </div>
-          </div>
-          <div class="box">
-            <div class="box-header">Effects</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Remove Boomer Goon</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Remove Smoke</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="row dim" data-toggle><span class="label">Remove Grass</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-            </div>
-          </div>
-        </div>
+    <div class="topbar" id="topbar">
+      <div class="brand">
+        <span class="brand-mark">BS</span>
+        <span class="brand-word"><b>Blood</b><i>Sense</i></span>
       </div>
 
-      <div class="pane" data-pane="visuals">
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Chams</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Player chams</span><span class="cbox c-purple" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Teammate chams</span><span class="cbox c-blue" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Visible only</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Ignore Z</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="box">
-            <div class="box-header">World</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">No fog</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">No skybox</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Brightness boost</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Max distance</span><span class="val">200</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="500" step="10" value="200"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="tabbar" id="tabbar" role="tablist">
+        <button class="tab active" data-tab="aim" role="tab" aria-selected="true" aria-label="Aim">
+          <img src="./mouse-2.png" alt="">
+          <span class="tab-name">Aim</span>
+        </button>
+        <button class="tab" data-tab="visuals" role="tab" aria-selected="false" aria-label="Visuals">
+          <img src="./eye.png" alt="">
+          <span class="tab-name">Visuals</span>
+        </button>
+        <button class="tab" data-tab="world" role="tab" aria-selected="false" aria-label="World">
+          <img src="./world-map.png" alt="">
+          <span class="tab-name">World</span>
+        </button>
+        <button class="tab" data-tab="effects" role="tab" aria-selected="false" aria-label="Effects">
+          <img src="./sun.png" alt="">
+          <span class="tab-name">Effects</span>
+        </button>
+        <button class="tab" data-tab="misc" role="tab" aria-selected="false" aria-label="Misc">
+          <img src="./list.png" alt="">
+          <span class="tab-name">Misc</span>
+        </button>
+        <button class="tab" data-tab="config" role="tab" aria-selected="false" aria-label="Config">
+          <img src="./settings.png" alt="">
+          <span class="tab-name">Config</span>
+        </button>
       </div>
 
-      <div class="pane" data-pane="world">
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Overlay</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Box</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Skeleton</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Health bar</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Name tag</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Items</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Pickup marker</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Ammo only</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Opacity</span><span class="val">85</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="100" step="1" value="85"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pane" data-pane="effects">
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Screen</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Remove flashbang</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Remove smoke</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Remove grass</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-              <div class="row on" data-toggle><span class="label">Remove skybox</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Tuning</div>
-            <div class="box-body">
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Brightness</span><span class="val">50</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="100" step="1" value="50"></div>
-              </div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Transparency</span><span class="val">70</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="100" step="1" value="70"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pane" data-pane="misc">
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Movement</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Bunnyhop</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Auto strafe</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row dim" data-toggle><span class="label">Fast walk</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Input</div>
-            <div class="box-body">
-              <div class="row" style="cursor:default;">
-                <span class="label">Menu key</span>
-                <select class="dropdown"><option>INSERT</option><option>DELETE</option><option>END</option></select>
-              </div>
-              <div class="slider-row" data-slider>
-                <div class="slider-top"><span class="label">Trigger delay</span><span class="val">40</span></div>
-                <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="250" step="5" value="40"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pane" data-pane="config">
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Profile</div>
-            <div class="box-body">
-              <div class="row on" data-toggle><span class="label">Auto load</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row on" data-toggle><span class="label">Auto save</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
-              <div class="row" style="cursor:default;">
-                <span class="label">Active config</span>
-                <select class="dropdown"><option>default</option><option>comp</option></select>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="box">
-            <div class="box-header">Layout</div>
-            <div class="box-body">
-              <div class="row" style="cursor:default;">
-                <span class="label">Tab bar position</span>
-                <select class="dropdown" id="barPos">
-                  <option value="top">Top</option>
-                  <option value="bottom">Bottom</option>
-                  <option value="left">Left</option>
-                  <option value="right">Right</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="box">
-            <div class="box-header">Status</div>
-            <div class="box-body">
-              <div class="row" style="cursor:default;"><span class="label">Build</span><span class="build-tag">v12</span></div>
-              <div class="row" style="cursor:default;"><span class="label">Uptime</span><span id="uptime" class="build-tag">0s</span></div>
-            </div>
-          </div>
+      <div class="topbar-actions">
+        <button class="btn" id="btnSave" title="Save config">SAVE</button>
+        <button class="btn" id="btnLoad" title="Load config">LOAD</button>
+        <button class="btn" id="btnReset" title="Reset everything">RESET</button>
+        <div class="master-toggle" id="masterToggle" tabindex="0" role="switch" aria-checked="false" title="Master switch">
+          <span class="master-label">MASTER</span>
+          <div class="switch"></div>
         </div>
       </div>
     </div>
+
+    <div class="menu" id="menu">
+      <div class="body" id="body">
+
+        <div class="pane active" data-pane="aim">
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Player ESP</div>
+              <div class="box-body">
+                <div class="row dim" data-toggle><span class="label">Enable ESP</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="row on" data-toggle><span class="label">Survivors</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Infected</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Special Infected</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Box</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Healthbar</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Name</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Weapons</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="row dim" data-toggle><span class="label">Minigun</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+              </div>
+            </div>
+            <div class="box">
+              <div class="box-header">Colored models</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Player Chams</span><span class="cbox c-purple" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Special Infected Chams</span><span class="cbox c-red" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Skybox Color</span><span class="cbox c-red" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Local Weapon Chams</span><span class="cbox c-red" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Other ESP</div>
+              <div class="box-body">
+                <div class="row dim" data-toggle><span class="label">Fov Modifier</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="row on" data-toggle><span class="label">Viewmodel Modifier</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="slider-row" data-slider data-default="6">
+                  <div class="slider-top"><span class="label">Viewmodel X</span><span class="val">6</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="10" step="1" value="6" aria-label="Viewmodel X"></div>
+                </div>
+                <div class="slider-row" data-slider data-default="9">
+                  <div class="slider-top"><span class="label">Viewmodel Y</span><span class="val">9</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="10" step="1" value="9" aria-label="Viewmodel Y"></div>
+                </div>
+                <div class="slider-row" data-slider data-default="-9">
+                  <div class="slider-top"><span class="label">Viewmodel Z</span><span class="val">-9</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="-10" max="10" step="1" value="-9" aria-label="Viewmodel Z"></div>
+                </div>
+                <div class="row on" data-toggle><span class="label">No Visual Recoil</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+              </div>
+            </div>
+            <div class="box">
+              <div class="box-header">Effects</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Remove Boomer Goon</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Remove Smoke</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="row dim" data-toggle><span class="label">Remove Grass</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="visuals">
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Chams</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Player chams</span><span class="cbox c-purple" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Teammate chams</span><span class="cbox c-blue" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Visible only</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Ignore Z</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box">
+              <div class="box-header">World</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">No fog</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">No skybox</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Brightness boost</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="slider-row" data-slider data-default="200">
+                  <div class="slider-top"><span class="label">Max distance</span><span class="val">200</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="500" step="10" value="200" aria-label="Max distance"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="world">
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Overlay</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Box</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Skeleton</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Health bar</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Name tag</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Items</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Pickup marker</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Ammo only</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="slider-row" data-slider data-default="85">
+                  <div class="slider-top"><span class="label">Opacity</span><span class="val">85</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="100" step="1" value="85" aria-label="Opacity"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="effects">
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Screen</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Remove flashbang</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Remove smoke</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Remove grass</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+                <div class="row on" data-toggle><span class="label">Remove skybox</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Tuning</div>
+              <div class="box-body">
+                <div class="slider-row" data-slider data-default="50">
+                  <div class="slider-top"><span class="label">Brightness</span><span class="val">50</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="100" step="1" value="50" aria-label="Brightness"></div>
+                </div>
+                <div class="slider-row" data-slider data-default="70">
+                  <div class="slider-top"><span class="label">Transparency</span><span class="val">70</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="100" step="1" value="70" aria-label="Transparency"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="misc">
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Movement</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Bunnyhop</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Auto strafe</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row dim" data-toggle><span class="label">Fast walk</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="false"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Input</div>
+              <div class="box-body">
+                <div class="row static">
+                  <span class="label">Menu key</span>
+                  <select class="dropdown" id="menuKey" aria-label="Menu key">
+                    <option>INSERT</option>
+                    <option>DELETE</option>
+                    <option>END</option>
+                    <option>F8</option>
+                  </select>
+                </div>
+                <div class="slider-row" data-slider data-default="40">
+                  <div class="slider-top"><span class="label">Trigger delay</span><span class="val">40</span></div>
+                  <div class="slider-track"><div class="slider-fill"></div><div class="slider-thumb"></div><input type="range" min="0" max="250" step="5" value="40" aria-label="Trigger delay"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="config">
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Profile</div>
+              <div class="box-body">
+                <div class="row on" data-toggle><span class="label">Auto load</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row on" data-toggle><span class="label">Auto save</span><span class="cbox" tabindex="0" role="checkbox" aria-checked="true"></span></div>
+                <div class="row static">
+                  <span class="label">Active config</span>
+                  <select class="dropdown" id="profile" aria-label="Active config">
+                    <option>default</option>
+                    <option>comp</option>
+                    <option>legit</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="box">
+              <div class="box-header">Session</div>
+              <div class="box-body">
+                <div class="row static"><span class="label">Build</span><span class="build-tag">v16</span></div>
+                <div class="row static"><span class="label">Uptime</span><span id="uptime" class="build-tag">0s</span></div>
+                <div class="row static"><span class="label">Status</span><span class="status-tag" id="statusTag"><i></i>READY</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box">
+              <div class="box-header">Layout</div>
+              <div class="box-body">
+                <div class="row static">
+                  <span class="label">Tab bar position</span>
+                  <select class="dropdown" id="barPos" aria-label="Tab bar position">
+                    <option value="top">Top</option>
+                    <option value="bottom">Bottom</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                  </select>
+                </div>
+                <div class="row static">
+                  <span class="label">UI scale</span>
+                  <select class="dropdown" id="uiScale" aria-label="UI scale">
+                    <option value="0.85">85%</option>
+                    <option value="1" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.25">125%</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="box">
+              <div class="box-header">Keys</div>
+              <div class="box-body">
+                <div class="row static"><span class="label">Toggle menu</span><span class="kbd" id="kbdToggle">INSERT</span></div>
+                <div class="row static"><span class="label">Snap config</span><span class="kbd">F9</span></div>
+                <div class="row static"><span class="label">Close</span><span class="kbd">ESC</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer">
+        <span class="foot-item"><i class="dot"></i>BloodSense <b>v16</b></span>
+        <span class="foot-sep"></span>
+        <span class="foot-item" id="footProfile">PROFILE: DEFAULT</span>
+        <span class="foot-spacer"></span>
+        <span class="foot-item dim" id="footHint">INSERT to hide · drag the bar to move</span>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="app.js"></script>
 </body>

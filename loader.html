@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BloodSense Loader</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23161618'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='13' font-weight='700' fill='%23ff2a2a' text-anchor='middle'%3EBS%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080a;
+    --panel: #121214;
+    --panel-2: #17171a;
+    --panel-hi: #1c1c20;
+    --border: #27272b;
+    --border-hi: #3a3a40;
+    --text: #e2e2e6;
+    --text-dim: #85858e;
+    --text-mute: #4c4c55;
+    --accent: #ff2a2a;
+    --accent-soft: #ff5a5a;
+    --accent-dim: #6e1414;
+    --accent-glow: rgba(255, 42, 42, 0.45);
+    --ok: #29d17a;
+    --warn: #ffb02a;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --r-sm: 5px;
+    --r-md: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: center;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.75) 100%);
+    pointer-events: none;
+  }
+
+  .loader {
+    position: relative;
+    width: 460px;
+    background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r-md);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+      0 0 70px rgba(255, 42, 42, 0.06);
+    overflow: hidden;
+    z-index: 2;
+    animation: panelIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  .loader.hidden { opacity: 0; pointer-events: none; transform: scale(0.98); }
+  @media (max-height: 660px) {
+    .loader { width: 420px; }
+    .hero { aspect-ratio: 3.4 / 1; }
+    .body { padding: 10px 12px 12px; gap: 9px; }
+    .log { height: 48px; }
+    .field, .inject-btn { height: 34px; }
+  }
+  @media (max-width: 500px) {
+    .loader { width: calc(100vw - 20px); }
+  }
+  .loader::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent) 20%, var(--accent) 80%, transparent);
+    opacity: 0.6;
+    z-index: 3;
+  }
+
+  /* ------------------------------------------------------------- titlebar */
+  .titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, #1e1e22 0%, #17171a 100%);
+    border-bottom: 1px solid var(--border);
+    cursor: grab;
+  }
+  .titlebar:active { cursor: grabbing; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, rgba(255, 42, 42, 0.25), rgba(255, 42, 42, 0.05));
+    border: 1px solid rgba(255, 42, 42, 0.45);
+    color: var(--accent-soft);
+    font-size: 9px;
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(255, 42, 42, 0.2);
+  }
+  .brand .blood { color: var(--accent); }
+  .brand .sense { color: var(--text); }
+  .brand .ver {
+    color: var(--text-mute);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    margin-left: 2px;
+  }
+
+  .traffic { display: flex; gap: 7px; }
+  .tl {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    transition: filter 0.15s, transform 0.15s;
+  }
+  .tl.min { background: #febc2e; }
+  .tl.zoom { background: #28c840; }
+  .tl.close { background: #ff5f57; }
+  .tl:hover { filter: brightness(1.25); transform: scale(1.12); }
+  .tl:active { filter: brightness(0.75); }
+
+  /* ----------------------------------------------------------------- hero */
+  .hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2.5 / 1;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    background: #000;
+  }
+  .hero img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+    filter: grayscale(0.15) contrast(1.12) brightness(0.72) saturate(1.1);
+    transform: scale(1.02);
+    transition: transform 6s ease;
+  }
+  .loader:hover .hero img { transform: scale(1.06); }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(18, 18, 20, 0.15) 0%, rgba(18, 18, 20, 0.2) 45%, var(--panel-2) 100%);
+  }
+  .hero-tag {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(6, 6, 8, 0.72);
+    border: 1px solid rgba(255, 42, 42, 0.35);
+    backdrop-filter: blur(6px);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-soft);
+  }
+  .hero-tag i {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  /* ---------------------------------------------------------------- body */
+  .body { padding: 13px 14px 14px; display: flex; flex-direction: column; gap: 11px; }
+
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 34px;
+    padding: 0 10px;
+    background: #0b0b0d;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field:focus-within {
+    border-color: rgba(255, 42, 42, 0.55);
+    box-shadow: 0 0 0 2px rgba(255, 42, 42, 0.1);
+  }
+  .field svg { width: 13px; height: 13px; fill: var(--text-mute); flex: 0 0 auto; transition: fill 0.15s; }
+  .field:focus-within svg { fill: var(--accent); }
+  .field input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .field input::placeholder { color: var(--text-mute); letter-spacing: 0.1em; }
+  .field-state {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+  .field-state.ok { color: var(--ok); }
+  .field-state.err { color: var(--accent); }
+
+  /* -------------------------------------------------------------- status */
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+  }
+  .stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 10px;
+    background: #0e0e10;
+    min-width: 0;
+  }
+  .stat .k {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+  .stat .v {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stat .v i { width: 4px; height: 4px; border-radius: 50%; background: var(--text-mute); }
+  .stat .v.ok { color: var(--ok); }
+  .stat .v.ok i { background: var(--ok); box-shadow: 0 0 7px rgba(41, 209, 122, 0.8); }
+  .stat .v.warn { color: var(--warn); }
+  .stat .v.warn i { background: var(--warn); }
+
+  /* ------------------------------------------------------------ progress */
+  .progress {
+    height: 3px;
+    background: #0b0b0d;
+    border-radius: 3px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .progress.on { opacity: 1; }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+    box-shadow: 0 0 12px var(--accent-glow);
+    border-radius: 3px;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ----------------------------------------------------------------- log */
+  .log {
+    height: 62px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 2px;
+    padding: 7px 9px;
+    background: #09090b;
+    border: 1px solid #1b1b1f;
+    border-radius: var(--r-sm);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    line-height: 1.35;
+    color: var(--text-mute);
+  }
+  .log-line { display: flex; gap: 7px; animation: logIn 0.22s ease both; white-space: nowrap; }
+  @keyframes logIn { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
+  .log-line .t { color: #33333a; flex: 0 0 auto; }
+  .log-line.ok { color: var(--ok); }
+  .log-line.err { color: var(--accent); }
+  .log-line.hl { color: #cfcfd6; }
+
+  /* ---------------------------------------------------------------- button */
+  .inject-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(180deg, #8a1c1c 0%, #6b1414 100%);
+    border: 1px solid var(--accent);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    overflow: hidden;
+    outline: none;
+    transition: all 0.14s ease;
+    box-shadow: 0 6px 18px rgba(255, 42, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .inject-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+  .inject-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #ff2a2a 0%, #c91818 100%);
+    box-shadow: 0 8px 26px rgba(255, 42, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
+  .inject-btn:hover:not(:disabled)::after { transform: translateX(100%); }
+  .inject-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+  .inject-btn:disabled {
+    background: #141417;
+    border-color: var(--border);
+    color: var(--text-mute);
+    cursor: default;
+    box-shadow: none;
+  }
+  .inject-btn svg { width: 14px; height: 14px; fill: currentColor; flex: 0 0 auto; }
+  .inject-btn.ok {
+    background: linear-gradient(180deg, #14663c 0%, #0f4d2d 100%);
+    border-color: var(--ok);
+    color: #d8ffe9;
+  }
+
+  .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #3b3b43;
+  }
+  .foot a { color: #3b3b43; text-decoration: none; }
+  .foot a:hover { color: var(--text-dim); }
+
+  /* ----------------------------------------------------------- boot plane */
+  .boot {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: linear-gradient(180deg, #121214 0%, #0c0c0e 100%);
+    border-radius: var(--r-md);
+    transition: opacity 0.3s ease;
+  }
+  .boot.hide { opacity: 0; pointer-events: none; }
+  .boot-logo {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    animation: glow 2.6s ease-in-out infinite;
+  }
+  .boot-logo .blood { color: var(--accent); }
+  .boot-logo .sense { color: var(--text); }
+  @keyframes glow {
+    0%, 100% { text-shadow: 0 0 18px rgba(255, 42, 42, 0.15); }
+    50% { text-shadow: 0 0 26px rgba(255, 42, 42, 0.45); }
+  }
+  .boot-bar { width: 168px; height: 2px; background: #1b1b1f; border-radius: 2px; overflow: hidden; }
+  .boot-bar span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.3s ease;
+  }
+  .boot-log {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mute);
+    height: 12px;
+  }
+  .boot-cursor {
+    display: inline-block;
+    width: 5px; height: 9px;
+    background: var(--accent);
+    animation: blink 1.05s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader" data-state="idle">
+
+  <div class="boot" id="bootScreen">
+    <div class="boot-logo"><span class="blood">Blood</span><span class="sense">Sense</span></div>
+    <div class="boot-bar"><span id="bootBar"></span></div>
+    <div class="boot-log"><span id="bootText">init core</span><span class="boot-cursor"></span></div>
+  </div>
+
+  <div class="titlebar" id="titlebar">
+    <div class="brand">
+      <span class="brand-mark">BS</span>
+      <span class="blood">Blood</span><span class="sense">Sense</span>
+      <span class="ver" id="verTag">v16</span>
+    </div>
+    <div class="traffic">
+      <div class="tl min" data-action="minimize" title="Minimize"></div>
+      <div class="tl zoom" data-action="maximize" title="Maximize"></div>
+      <div class="tl close" data-action="close" title="Close"></div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <img src="./1329760.jpeg" alt="">
+    <div class="hero-tag"><i></i>Counter-Strike 2</div>
+  </div>
+
+  <div class="body">
+
+    <div class="field" id="keyField">
+      <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z"/></svg>
+      <input id="keyInput" type="text" placeholder="LICENSE KEY" maxlength="32" spellcheck="false" autocomplete="off">
+      <span class="field-state" id="keyState">UNVERIFIED</span>
+    </div>
+
+    <div class="status-grid">
+      <div class="stat"><span class="k">game</span><span class="v" id="statGame"><i></i>scanning</span></div>
+      <div class="stat"><span class="k">build</span><span class="v" id="statBuild"><i></i>14192</span></div>
+      <div class="stat"><span class="k">session</span><span class="v" id="statSession"><i></i>offline</span></div>
+      <div class="stat"><span class="k">uptime</span><span class="v" id="statUptime"><i></i>00:00</span></div>
+    </div>
+
+    <div class="progress" id="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div class="log" id="log"></div>
+
+    <button class="inject-btn" id="injectBtn">
+      <svg viewBox="0 0 24 24"><path d="M20 4l-7 9v6l-2 2-2-2v-6l-6-8 9 5 6-6z"/></svg>
+      <span id="injectLabel">Initialize</span>
+    </button>
+
+    <div class="foot">
+      <span>bloodsense.online</span>
+      <span id="footState">idle</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+
+  const loader     = $("#loader");
+  const titlebar   = $("#titlebar");
+  const injectBtn  = $("#injectBtn");
+  const injectLbl  = $("#injectLabel");
+  const progress   = $("#progress");
+  const fill       = $("#progressFill");
+  const logEl      = $("#log");
+  const keyInput   = $("#keyInput");
+  const keyState   = $("#keyState");
+  const footState  = $("#footState");
+
+  const bridge = window.chrome && window.chrome.webview;
+  const hosted = !!bridge;
+
+  const send = (type, data) => {
+    if (hosted) {
+      bridge.postMessage({ type, data: data || {} });
+    } else {
+      console.log("[bridge]", type, data || {});
+    }
+  };
+
+  /* ------------------------------------------------------------- logging */
+  const stamp = () => new Date().toTimeString().slice(0, 8);
+  const log = (msg, kind) => {
+    const line = document.createElement("div");
+    line.className = "log-line" + (kind ? " " + kind : "");
+    line.innerHTML = '<span class="t">' + stamp() + '</span><span></span>';
+    line.lastChild.textContent = msg;
+    logEl.appendChild(line);
+    while (logEl.children.length > 4) logEl.firstChild.remove();
+  };
+
+  /* ------------------------------------------------------------ progress */
+  const setProgress = (pct) => {
+    progress.classList.toggle("on", pct > 0 && pct < 100);
+    fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+  };
+
+  /* -------------------------------------------------------------- status */
+  const setStat = (el, text, tone) => {
+    if (!el) return;
+    el.className = "v" + (tone ? " " + tone : "");
+    el.innerHTML = "<i></i>";
+    el.appendChild(document.createTextNode(text));
+  };
+
+  /* ------------------------------------------------------ window controls */
+  document.querySelectorAll(".tl").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      send("window", { action });
+      if (action === "close" && !hosted) {
+        loader.classList.add("hidden");
+        setTimeout(() => loader.classList.remove("hidden"), 900);
+      }
+      if (action === "minimize" && !hosted) {
+        loader.classList.add("hidden");
+        setTimeout(() => loader.classList.remove("hidden"), 900);
+      }
+    });
+  });
+
+  /* ----------------------------------------------------------------- drag */
+  let drag = null, rafId = null;
+  titlebar.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".tl")) return;
+    const rect = loader.getBoundingClientRect();
+    drag = { x: e.clientX, y: e.clientY, ox: rect.left, oy: rect.top };
+    loader.style.position = "fixed";
+    loader.style.transform = "none";
+    loader.style.animation = "none";
+    loader.style.left = rect.left + "px";
+    loader.style.top = rect.top + "px";
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      loader.style.left = drag.ox + dx + "px";
+      loader.style.top = drag.oy + dy + "px";
+    });
+  });
+  window.addEventListener("mouseup", () => {
+    if (!drag) return;
+    drag = null;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+  });
+
+  /* ------------------------------------------------------------- hide key */
+  document.addEventListener("keydown", (e) => {
+    if (hosted) return; // host owns the toggle inside the loader window
+    if (e.key === "Insert" || e.key === "Escape") {
+      if (e.target.tagName === "INPUT") return;
+      e.preventDefault();
+      loader.classList.toggle("hidden");
+    }
+  });
+
+  /* ------------------------------------------------------------ key input */
+  const KEY_BACKEND = false; // flip on when the licence endpoint exists
+  const normalize = (v) => v.replace(/[^A-Za-z0-9-]/g, "").toUpperCase();
+
+  const setKeyState = (text, tone) => {
+    keyState.textContent = text;
+    keyState.className = "field-state" + (tone ? " " + tone : "");
+  };
+
+  const verifyKey = () => {
+    const key = normalize(keyInput.value);
+    if (!key) {
+      setKeyState("UNVERIFIED", "");
+      return;
+    }
+    if (!KEY_BACKEND) {
+      // Offline build: the key is echoed to the host and stored locally only.
+      try { localStorage.setItem("bloodsense.key", key); } catch (_) {}
+      send("key_submit", { key });
+      setKeyState("HELD", "ok");
+      log("key staged " + key.slice(0, 4) + "...", "ok");
+      return;
+    }
+    setKeyState("CHECKING", "");
+    send("key_submit", { key });
+  };
+
+  keyInput.addEventListener("input", () => {
+    keyInput.value = normalize(keyInput.value);
+  });
+  keyInput.addEventListener("blur", verifyKey);
+  keyInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      verifyKey();
+      injectBtn.focus();
+    }
+  });
+
+  try {
+    const saved = localStorage.getItem("bloodsense.key");
+    if (saved) keyInput.value = saved;
+  } catch (_) {}
+
+  /* -------------------------------------------------------------- session */
+  const t0 = Date.now();
+  setInterval(() => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    setStat($("#statUptime"), mm + ":" + ss, "");
+  }, 1000);
+
+  setStat($("#statGame"), hosted ? "attached" : "browser", hosted ? "ok" : "warn");
+  setStat($("#statSession"), hosted ? "live" : "preview", hosted ? "ok" : "warn");
+  footState.textContent = hosted ? "connected" : "preview";
+
+  /* ----------------------------------------------------------- boot plane */
+  const bootScreen = $("#bootScreen");
+  const bootText = $("#bootText");
+  const bootBar = $("#bootBar");
+  const bootSteps = [
+    [22, "init core"],
+    [46, "resolve endpoints"],
+    [68, "handshake"],
+    [88, "load modules"],
+    [100, "ready"]
+  ];
+
+  let bi = 0;
+  const bootTimer = setInterval(() => {
+    if (bi >= bootSteps.length) {
+      clearInterval(bootTimer);
+      bootScreen.classList.add("hide");
+      setTimeout(() => bootScreen.remove(), 320);
+      log("loader ready", "hl");
+      return;
+    }
+    const [pct, msg] = bootSteps[bi++];
+    bootText.textContent = msg;
+    bootBar.style.width = pct + "%";
+  }, 420);
+
+  /* -------------------------------------------------------------- inject */
+  const stepLabels = [
+    [14, "resolving endpoints"],
+    [32, "fetching module"],
+    [50, "opening handle"],
+    [68, "writing image"],
+    [85, "flushing buffers"],
+    [100, "complete"]
+  ];
+
+  let busy = false;
+
+  const finish = (ok, detail) => {
+    busy = false;
+    loader.dataset.state = ok ? "ok" : "error";
+    injectBtn.disabled = false;
+    injectBtn.classList.toggle("ok", ok);
+    injectLbl.textContent = ok ? "Injected" : "Retry";
+    setProgress(0);
+    if (ok) {
+      setStat($("#statGame"), "attached", "ok");
+      setStat($("#statSession"), "live", "ok");
+      log("inject complete" + (detail ? " " + detail : ""), "ok");
+      footState.textContent = "running";
+    } else {
+      setStat($("#statGame"), "not found", "warn");
+      log(detail || "inject failed", "err");
+      footState.textContent = "error";
+    }
+  };
+
+  const run = () => {
+    if (busy) return;
+    busy = true;
+    loader.dataset.state = "busy";
+    injectBtn.disabled = true;
+    injectBtn.classList.remove("ok");
+    injectLbl.textContent = "Initializing";
+    log("inject requested", "hl");
+    send("inject_begin", { key: normalize(keyInput.value), game: "cs2" });
+
+    let i = 0;
+    const tick = () => {
+      if (i >= stepLabels.length) {
+        finish(true, "");
+        return;
+      }
+      const [pct, msg] = stepLabels[i++];
+      setProgress(pct);
+      injectLbl.textContent = msg.toUpperCase();
+      log(msg);
+      setTimeout(tick, 380 + Math.random() * 220);
+    };
+    setTimeout(tick, 180);
+  };
+
+  injectBtn.addEventListener("click", run);
+
+  /* --------------------------------------------------------- host messages */
+  if (hosted) {
+    bridge.addEventListener("message", (e) => {
+      const msg = e.data || {};
+      const type = msg.type;
+      const data = msg.data || {};
+
+      if (type === "status") {
+        if (data.game) setStat($("#statGame"), data.game, data.ok ? "ok" : "warn");
+        if (typeof data.build === "string") setStat($("#statBuild"), data.build, "");
+        log(data.text || "status", data.ok ? "ok" : "");
+      } else if (type === "progress" && typeof data.pct === "number") {
+        setProgress(data.pct);
+      } else if (type === "inject_ok") {
+        finish(true, data.detail || "");
+      } else if (type === "inject_fail") {
+        finish(false, data.text || "inject failed");
+      } else if (type === "key_result") {
+        if (data.ok) {
+          setKeyState("VERIFIED", "ok");
+          log("key verified", "ok");
+        } else {
+          setKeyState("DENIED", "err");
+          log(data.text || "key denied", "err");
+        }
+      } else if (type === "set_version" && data.version) {
+        $("#verTag").textContent = data.version;
+      } else if (type === "ready") {
+        log("host handshake", "ok");
+      }
+    });
+    send("ready", { page: "loader" });
+  }
+})();
+</script>
+</body>
+</html>
